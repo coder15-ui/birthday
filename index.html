@@ -1,0 +1,152 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blow the Candle - Happy Birthday</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&display=swap');body {
+  background: #ffeef6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-family: 'Cherry Bomb One', cursive;
+  overflow: hidden;
+  text-align: center;
+}
+
+h1, #message {
+  letter-spacing: 3px;
+  font-size: 2rem;
+  color: #ff1493;
+  margin: 20px;
+}
+
+.cake {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(to bottom, #ffc0cb, #ff69b4);
+  border-radius: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.candle {
+  position: absolute;
+  top: -70px;
+  left: 55px;
+  width: 10px;
+  height: 70px;
+  background: #f5deb3;
+  border-radius: 2px;
+}
+
+.flame {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, yellow 40%, orange 70%, transparent 80%);
+  border-radius: 50%;
+  animation: flicker 0.2s infinite;
+}
+
+@keyframes flicker {
+  0% { transform: translateX(-50%) scale(1); opacity: 1; }
+  50% { transform: translateX(-50%) scale(1.1); opacity: 0.8; }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+#message {
+  display: none;
+  animation: fadeIn 2s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.name-entry {
+  margin-top: 10px;
+}
+
+.name-input {
+  padding: 8px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 2px solid #ff69b4;
+  outline: none;
+  text-align: center;
+}
+
+.start-btn {
+  margin-top: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  background-color: #ff69b4;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+  </style>
+</head>
+<body>
+  <div class="name-entry">
+    <input type="text" id="name" class="name-input" placeholder="Enter Name...">
+    <button class="start-btn" onclick="startCard()">Start</button>
+  </div>  <h1 id="title" style="display:none;">🎂 Blow the Candle to Reveal the Surprise!</h1>
+  <div class="cake" id="cake" style="display:none;">
+    <div class="candle">
+      <div class="flame" id="flame"></div>
+    </div>
+  </div>
+  <div id="message"></div>  <script>
+    function startCard() {
+      const name = document.getElementById("name").value.trim();
+      if (!name) {
+        alert("Please enter a name!");
+        return;
+      }
+      document.querySelector(".name-entry").style.display = "none";
+      document.getElementById("title").style.display = "block";
+      document.getElementById("cake").style.display = "block";
+
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(function(stream) {
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const source = audioContext.createMediaStreamSource(stream);
+          const analyser = audioContext.createAnalyser();
+          source.connect(analyser);
+
+          const data = new Uint8Array(analyser.fftSize);
+
+          function checkVolume() {
+            analyser.getByteTimeDomainData(data);
+            let total = 0;
+            for (let i = 0; i < data.length; i++) {
+              let deviation = data[i] - 128;
+              total += deviation * deviation;
+            }
+            let rms = Math.sqrt(total / data.length);
+
+            if (rms > 15) {
+              document.getElementById('flame').style.display = 'none';
+              document.getElementById('message').style.display = 'block';
+              document.getElementById('message').innerHTML = 🎉 Happy Birthday, ${name}! 🎉;
+            }
+            requestAnimationFrame(checkVolume);
+          }
+          checkVolume();
+        })
+        .catch(function(err) {
+          alert('Mic access denied or not supported. Cannot detect blowing.');
+        });
+    }
+  </script></body>
+</html>
