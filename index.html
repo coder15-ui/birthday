@@ -1,0 +1,109 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blow the Candle</title>
+  <style>
+    body {
+      background: #fff4f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: 'Arial', sans-serif;
+      overflow: hidden;
+    }h1 {
+  margin-bottom: 20px;
+}
+
+.cake {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  background: #ffb6c1;
+  border-radius: 20px;
+}
+
+.candle {
+  position: absolute;
+  top: -60px;
+  left: 45px;
+  width: 10px;
+  height: 60px;
+  background: #f5deb3;
+  border-radius: 2px;
+}
+
+.flame {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, yellow 40%, orange 70%, transparent 80%);
+  border-radius: 50%;
+  animation: flicker 0.2s infinite;
+}
+
+@keyframes flicker {
+  0% { transform: translateX(-50%) scale(1); opacity: 1; }
+  50% { transform: translateX(-50%) scale(1.1); opacity: 0.8; }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+#message {
+  margin-top: 30px;
+  font-size: 24px;
+  display: none;
+  animation: fadeIn 2s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+  </style>
+</head>
+<body>
+  <h1>🎂 Blow the Candle to Reveal the Surprise!</h1>
+  <div class="cake">
+    <div class="candle">
+      <div class="flame" id="flame"></div>
+    </div>
+  </div>
+  <div id="message">🎉 Happy Birthday! 🎉</div>  <script>
+    // Mic detection and sound threshold
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(function(stream) {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        source.connect(analyser);
+
+        const data = new Uint8Array(analyser.fftSize);
+
+        function checkVolume() {
+          analyser.getByteTimeDomainData(data);
+          let total = 0;
+          for (let i = 0; i < data.length; i++) {
+            let deviation = data[i] - 128;
+            total += deviation * deviation;
+          }
+          let rms = Math.sqrt(total / data.length);
+
+          if (rms > 15) { // blowing detected
+            document.getElementById('flame').style.display = 'none';
+            document.getElementById('message').style.display = 'block';
+          }
+          requestAnimationFrame(checkVolume);
+        }
+        checkVolume();
+      })
+      .catch(function(err) {
+        alert('Mic access denied or not supported. Cannot detect blowing.');
+      });
+  </script></body>
+</html>
